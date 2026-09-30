@@ -1,0 +1,2198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>BlockWorld</title>
+
+<style>
+
+html,body{
+margin:0;
+width:100%;
+height:100%;
+overflow:hidden;
+background:#87ceeb;
+font-family:Arial,sans-serif;
+}
+
+*{
+box-sizing:border-box;
+user-select:none;
+-webkit-user-select:none;
+-webkit-tap-highlight-color:transparent;
+}
+
+canvas{
+display:block;
+}
+
+/* START SCREEN */
+
+#start{
+position:fixed;
+inset:0;
+z-index:100;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+color:white;
+
+background:
+linear-gradient(
+180deg,
+#4fc4ed 0%,
+#397fae 50%,
+#172b48 100%
+);
+}
+
+#start h1{
+font-size:48px;
+margin:0 0 8px;
+font-weight:900;
+letter-spacing:3px;
+text-shadow:
+0 5px 0 #20384c,
+0 10px 20px #000;
+}
+
+#start p{
+margin:0 0 30px;
+}
+
+.mode{
+width:270px;
+padding:18px;
+margin:7px;
+border:3px solid white;
+border-radius:13px;
+color:white;
+font-size:21px;
+font-weight:bold;
+box-shadow:0 7px 20px #0008;
+}
+
+#survival{
+background:linear-gradient(#62bd4e,#27752c);
+}
+
+#creative{
+background:linear-gradient(#4db5ed,#1765a5);
+}
+
+.mode:active{
+transform:scale(.96);
+}
+
+
+/* HUD */
+
+#hud{
+position:fixed;
+inset:0;
+z-index:20;
+pointer-events:none;
+color:white;
+text-shadow:0 2px 3px #000;
+}
+
+#mode{
+position:absolute;
+top:10px;
+left:10px;
+background:#0009;
+padding:8px 12px;
+border-radius:8px;
+font-weight:bold;
+}
+
+#stats{
+position:absolute;
+top:10px;
+right:10px;
+text-align:right;
+}
+
+.bar{
+width:135px;
+height:11px;
+background:#222c;
+border:1px solid white;
+border-radius:7px;
+margin:2px;
+overflow:hidden;
+}
+
+.fill{
+height:100%;
+}
+
+#hp{
+background:#e33434;
+width:100%;
+}
+
+#food{
+background:#eda91d;
+width:100%;
+}
+
+
+/* CROSSHAIR */
+
+#cross{
+position:absolute;
+left:50%;
+top:50%;
+width:22px;
+height:22px;
+transform:translate(-50%,-50%);
+}
+
+#cross:before,
+#cross:after{
+content:"";
+position:absolute;
+background:white;
+box-shadow:0 0 4px black;
+}
+
+#cross:before{
+left:10px;
+width:2px;
+height:22px;
+}
+
+#cross:after{
+top:10px;
+height:2px;
+width:22px;
+}
+
+
+/* INVENTORY BUTTON */
+
+#invBtn{
+position:fixed;
+right:10px;
+bottom:115px;
+z-index:40;
+
+padding:10px 13px;
+
+border:2px solid white;
+border-radius:9px;
+
+background:#222c;
+color:white;
+
+font-weight:bold;
+}
+
+
+/* SELECTED BLOCK */
+
+#selected{
+position:fixed;
+left:50%;
+bottom:14px;
+transform:translateX(-50%);
+
+z-index:40;
+
+background:#000c;
+color:white;
+
+padding:6px 12px;
+
+border-radius:7px;
+
+border:1px solid white;
+}
+
+
+/* JOYSTICK */
+
+#joyArea{
+position:fixed;
+left:0;
+bottom:0;
+
+width:215px;
+height:215px;
+
+z-index:40;
+}
+
+#joyBase{
+position:absolute;
+
+left:25px;
+bottom:25px;
+
+width:135px;
+height:135px;
+
+border-radius:50%;
+
+border:3px solid #ffffff88;
+
+background:#0004;
+
+box-shadow:
+inset 0 0 25px #0008;
+}
+
+#joy{
+position:absolute;
+
+left:32px;
+top:32px;
+
+width:65px;
+height:65px;
+
+border-radius:50%;
+
+border:3px solid white;
+
+background:
+radial-gradient(
+circle at 30% 25%,
+#eeeeee,
+#777777
+);
+
+box-shadow:
+0 5px 12px #0008;
+}
+
+
+/* JUMP */
+
+#jump{
+position:fixed;
+
+right:25px;
+bottom:25px;
+
+z-index:40;
+
+width:72px;
+height:72px;
+
+border-radius:50%;
+
+border:3px solid white;
+
+background:#444b;
+
+color:white;
+
+font-size:30px;
+}
+
+
+/* INVENTORY */
+
+#inventory{
+position:fixed;
+
+left:50%;
+top:50%;
+
+transform:translate(-50%,-50%);
+
+z-index:80;
+
+width:min(92vw,500px);
+
+max-height:80vh;
+
+overflow:auto;
+
+display:none;
+
+padding:15px;
+
+background:#181b20f5;
+
+color:white;
+
+border:3px solid #aaa;
+
+border-radius:14px;
+
+box-shadow:
+0 15px 50px #000;
+}
+
+#inventory h2{
+text-align:center;
+margin:4px 0 15px;
+}
+
+#items{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:9px;
+}
+
+.item{
+min-height:75px;
+
+background:#30343a;
+
+border:2px solid #666;
+
+border-radius:8px;
+
+display:flex;
+
+flex-direction:column;
+
+align-items:center;
+
+justify-content:center;
+
+font-size:11px;
+
+text-align:center;
+}
+
+.item:active{
+background:#666;
+}
+
+.icon{
+width:30px;
+height:30px;
+
+border:2px solid #111;
+
+margin-bottom:5px;
+}
+
+#close{
+width:100%;
+
+margin-top:15px;
+
+padding:11px;
+
+border:0;
+
+border-radius:7px;
+
+font-weight:bold;
+}
+
+
+/* MESSAGE */
+
+#msg{
+position:fixed;
+
+z-index:90;
+
+left:50%;
+top:72%;
+
+transform:translateX(-50%);
+
+background:#000c;
+
+color:white;
+
+padding:10px 16px;
+
+border-radius:8px;
+
+opacity:0;
+
+transition:.2s;
+
+pointer-events:none;
+}
+
+
+/* DAMAGE FLASH */
+
+#damage{
+position:fixed;
+
+inset:0;
+
+z-index:70;
+
+background:red;
+
+opacity:0;
+
+pointer-events:none;
+}
+
+
+@media(max-width:500px){
+
+#start h1{
+font-size:39px;
+}
+
+#items{
+grid-template-columns:repeat(3,1fr);
+}
+
+}
+
+</style>
+</head>
+
+
+<body>
+
+
+<!-- START MENU -->
+
+<div id="start">
+
+<h1>BLOCKWORLD</h1>
+
+<p>
+Explore • Build • Craft • Survive
+</p>
+
+<button class="mode" id="survival">
+🌲 SURVIVAL
+</button>
+
+<button class="mode" id="creative">
+✨ CREATIVE
+</button>
+
+</div>
+
+
+<!-- HUD -->
+
+<div id="hud">
+
+<div id="mode">
+BLOCKWORLD
+</div>
+
+<div id="stats">
+
+❤️
+
+<div class="bar">
+<div id="hp" class="fill"></div>
+</div>
+
+🍗
+
+<div class="bar">
+<div id="food" class="fill"></div>
+</div>
+
+</div>
+
+<div id="cross"></div>
+
+</div>
+
+
+<!-- INVENTORY BUTTON -->
+
+<button id="invBtn">
+🎒 Inventory
+</button>
+
+
+<!-- SELECTED BLOCK -->
+
+<div id="selected">
+Grass
+</div>
+
+
+<!-- JOYSTICK -->
+
+<div id="joyArea">
+
+<div id="joyBase">
+
+<div id="joy"></div>
+
+</div>
+
+</div>
+
+
+<!-- JUMP -->
+
+<button id="jump">
+↑
+</button>
+
+
+<!-- EFFECTS -->
+
+<div id="damage"></div>
+
+<div id="msg"></div>
+
+
+<!-- INVENTORY -->
+
+<div id="inventory">
+
+<h2>
+🎒 Inventory
+</h2>
+
+<div id="items"></div>
+
+<button id="close">
+CLOSE
+</button>
+
+</div>
+
+
+<!-- THREE.JS -->
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.min.js"></script>
+
+
+<script>
+
+(function(){
+
+"use strict";
+
+
+/* =====================================================
+   CHECK THREE.JS
+===================================================== */
+
+if(!window.THREE){
+
+document.getElementById("start").innerHTML=
+"<h2>Game library could not load.</h2>"+
+"<p>Please check your internet connection and refresh.</p>";
+
+return;
+
+}
+
+
+const T=THREE;
+
+
+/* =====================================================
+   GAME VARIABLES
+===================================================== */
+
+let scene;
+let camera;
+let renderer;
+let clock;
+
+let sun;
+let ambient;
+
+let world=new Map();
+
+let meshes=[];
+
+let animals=[];
+
+let monsters=[];
+
+
+let mode="survival";
+
+let selected="grass";
+
+let player={
+x:0,
+y:8,
+z:5
+};
+
+
+let yaw=0;
+let pitch=0;
+
+let velocityY=0;
+
+let grounded=false;
+
+
+let joystickX=0;
+let joystickY=0;
+
+let joystickPointer=null;
+
+let lookPointer=null;
+
+let lastLookX=0;
+let lastLookY=0;
+
+
+let health=100;
+let hunger=100;
+
+let damageCooldown=0;
+
+let dayTime=0;
+
+let monsterTimer=0;
+
+
+let keys={};
+
+
+/* =====================================================
+   BLOCK TYPES
+===================================================== */
+
+const BLOCKS={
+
+grass:{
+name:"Grass",
+color:0x55a63a
+},
+
+dirt:{
+name:"Dirt",
+color:0x79502f
+},
+
+stone:{
+name:"Stone",
+color:0x777b7d
+},
+
+sand:{
+name:"Sand",
+color:0xd9c27b
+},
+
+wood:{
+name:"Wood",
+color:0x79502f
+},
+
+leaves:{
+name:"Leaves",
+color:0x2f8d3a,
+transparent:true
+},
+
+plank:{
+name:"Wood Planks",
+color:0xb57940
+},
+
+water:{
+name:"Water",
+color:0x42c9e8,
+transparent:true
+},
+
+brick:{
+name:"Brick",
+color:0x9d4d40
+},
+
+snow:{
+name:"Snow",
+color:0xf1f7ff
+},
+
+gold:{
+name:"Gold Ore",
+color:0xd4a719
+},
+
+crystal:{
+name:"Crystal",
+color:0x67eaff,
+transparent:true
+},
+
+obsidian:{
+name:"Obsidian",
+color:0x251c3a
+}
+
+};
+
+
+/* =====================================================
+   START GAME
+===================================================== */
+
+document.getElementById(
+"survival"
+).onclick=function(){
+
+startGame("survival");
+
+};
+
+
+document.getElementById(
+"creative"
+).onclick=function(){
+
+startGame("creative");
+
+};
+
+
+function startGame(selectedMode){
+
+mode=selectedMode;
+
+document.getElementById(
+"start"
+).style.display="none";
+
+init();
+
+}
+
+
+/* =====================================================
+   INITIALIZE
+===================================================== */
+
+function init(){
+
+scene=new T.Scene();
+
+scene.background=
+new T.Color(0x78c9ee);
+
+
+scene.fog=
+new T.Fog(
+0x78c9ee,
+25,
+95
+);
+
+
+camera=
+new T.PerspectiveCamera(
+75,
+innerWidth/innerHeight,
+0.05,
+180
+);
+
+
+renderer=
+new T.WebGLRenderer({
+
+antialias:true,
+
+powerPreference:
+"high-performance"
+
+});
+
+
+renderer.setSize(
+innerWidth,
+innerHeight
+);
+
+
+renderer.setPixelRatio(
+Math.min(
+window.devicePixelRatio,
+1.6
+)
+);
+
+
+renderer.shadowMap.enabled=true;
+
+renderer.shadowMap.type=
+T.PCFSoftShadowMap;
+
+
+document.body.appendChild(
+renderer.domElement
+);
+
+
+clock=new T.Clock();
+
+
+/* LIGHT */
+
+ambient=
+new T.HemisphereLight(
+0xbceaff,
+0x47382a,
+1.35
+);
+
+scene.add(ambient);
+
+
+sun=
+new T.DirectionalLight(
+0xffffff,
+2
+);
+
+sun.position.set(
+30,
+60,
+20
+);
+
+sun.castShadow=true;
+
+sun.shadow.mapSize.width=1024;
+
+sun.shadow.mapSize.height=1024;
+
+sun.shadow.camera.left=-55;
+
+sun.shadow.camera.right=55;
+
+sun.shadow.camera.top=55;
+
+sun.shadow.camera.bottom=-55;
+
+scene.add(sun);
+
+
+/* WORLD */
+
+generateWorld();
+
+createPlayer();
+
+createAnimals();
+
+createInventory();
+
+setupControls();
+
+updateHUD();
+
+window.addEventListener(
+"resize",
+resize
+);
+
+
+animate();
+
+}
+
+
+/* =====================================================
+   WORLD STORAGE
+===================================================== */
+
+function blockKey(x,y,z){
+
+return x+","+y+","+z;
+
+}
+
+
+function setBlock(x,y,z,type){
+
+world.set(
+blockKey(x,y,z),
+type
+);
+
+}
+
+
+function getBlock(x,y,z){
+
+return world.get(
+blockKey(x,y,z)
+);
+
+}
+
+
+function removeBlock(x,y,z){
+
+world.delete(
+blockKey(x,y,z)
+);
+
+}
+
+
+/* =====================================================
+   TERRAIN
+===================================================== */
+
+function terrainHeight(x,z){
+
+let h=5;
+
+h+=Math.sin(x*0.19)*2.2;
+
+h+=Math.cos(z*0.23)*2;
+
+h+=Math.sin(
+(x+z)*0.11
+)*2;
+
+h+=Math.sin(
+x*0.47+z*0.21
+)*0.7;
+
+return Math.max(
+1,
+Math.floor(h)
+);
+
+}
+
+
+/* =====================================================
+   GENERATE WORLD
+===================================================== */
+
+function generateWorld(){
+
+const SIZE=34;
+
+
+for(
+let x=-SIZE;
+x<=SIZE;
+x++
+){
+
+for(
+let z=-SIZE;
+z<=SIZE;
+z++
+){
+
+const h=
+terrainHeight(x,z);
+
+
+/* TERRAIN */
+
+for(
+let y=0;
+y<=h;
+y++
+){
+
+let type="dirt";
+
+
+if(y===h){
+
+if(h<=2){
+
+type="sand";
+
+}
+else{
+
+type="grass";
+
+}
+
+}
+else if(y<2){
+
+type="stone";
+
+}
+
+
+setBlock(
+x,
+y,
+z,
+type
+);
+
+}
+
+
+/* WATER */
+
+if(h<=2){
+
+for(
+let y=h+1;
+y<=3;
+y++
+){
+
+setBlock(
+x,
+y,
+z,
+"water"
+);
+
+}
+
+}
+
+}
+
+}
+
+
+/* TREES */
+
+for(
+let i=0;
+i<75;
+i++
+){
+
+const x=
+Math.floor(
+Math.random()*60-30
+);
+
+const z=
+Math.floor(
+Math.random()*60-30
+);
+
+const h=
+terrainHeight(x,z);
+
+if(h>3){
+
+createTree(
+x,
+h+1,
+z
+);
+
+}
+
+}
+
+
+/* CAVES */
+
+for(
+let i=0;
+i<180;
+i++
+){
+
+const x=
+Math.floor(
+Math.random()*48-24
+);
+
+const y=
+Math.floor(
+Math.random()*5
+);
+
+const z=
+Math.floor(
+Math.random()*48-24
+);
+
+if(y>0){
+
+removeBlock(
+x,
+y,
+z
+);
+
+}
+
+}
+
+
+/* ORES */
+
+for(
+let i=0;
+i<80;
+i++
+){
+
+const x=
+Math.floor(
+Math.random()*45-22
+);
+
+const z=
+Math.floor(
+Math.random()*45-22
+);
+
+const h=
+terrainHeight(x,z);
+
+if(h>3){
+
+setBlock(
+x,
+Math.max(1,h-2),
+z,
+Math.random()<0.7
+?"gold"
+:"crystal"
+);
+
+}
+
+}
+
+
+rebuildWorld();
+
+}
+
+
+/* =====================================================
+   TREE
+===================================================== */
+
+function createTree(x,y,z){
+
+const height=
+4+
+Math.floor(
+Math.random()*2
+);
+
+
+for(
+let i=0;
+i<height;
+i++
+){
+
+setBlock(
+x,
+y+i,
+z,
+"wood"
+);
+
+}
+
+
+for(
+let dx=-2;
+dx<=2;
+dx++
+){
+
+for(
+let dz=-2;
+dz<=2;
+dz++
+){
+
+for(
+let dy=height-2;
+dy<=height;
+dy++
+){
+
+if(
+Math.abs(dx)+
+Math.abs(dz)<4
+){
+
+setBlock(
+x+dx,
+y+dy,
+z+dz,
+"leaves"
+);
+
+}
+
+}
+
+}
+
+}
+
+}
+
+
+/* =====================================================
+   MATERIALS
+===================================================== */
+
+function createMaterial(type){
+
+const data=
+BLOCKS[type];
+
+
+return new T.MeshLambertMaterial({
+
+color:data.color,
+
+transparent:
+!!data.transparent,
+
+opacity:
+data.transparent
+?0.65
+:1
+
+});
+
+}
+
+
+/* =====================================================
+   CREATE WORLD MESHES
+===================================================== */
+
+function rebuildWorld(){
+
+for(
+let i=0;
+i<meshes.length;
+i++
+){
+
+scene.remove(
+meshes[i]
+);
+
+}
+
+
+meshes=[];
+
+
+world.forEach(
+function(type,key){
+
+const parts=
+key.split(",")
+.map(Number);
+
+const x=parts[0];
+const y=parts[1];
+const z=parts[2];
+
+
+const cube=
+new T.Mesh(
+
+new T.BoxGeometry(
+1,
+1,
+1
+),
+
+createMaterial(type)
+
+);
+
+
+cube.position.set(
+x+0.5,
+y+0.5,
+z+0.5
+);
+
+
+cube.castShadow=true;
+
+cube.receiveShadow=true;
+
+
+cube.userData={
+x:x,
+y:y,
+z:z,
+type:type
+};
+
+
+scene.add(cube);
+
+meshes.push(cube);
+
+});
+
+}
+
+
+/* =====================================================
+   PLAYER
+===================================================== */
+
+function createPlayer(){
+
+player.y=
+getGroundHeight(
+player.x,
+player.z
+);
+
+
+camera.position.set(
+player.x,
+player.y+1.5,
+player.z
+);
+
+}
+
+
+/* =====================================================
+   GROUND HEIGHT
+===================================================== */
+
+function getGroundHeight(x,z){
+
+const bx=
+Math.floor(x);
+
+const bz=
+Math.floor(z);
+
+let highest=-1;
+
+
+for(
+let y=0;
+y<25;
+y++
+){
+
+if(
+getBlock(
+bx,
+y,
+bz
+)
+){
+
+highest=y;
+
+}
+
+}
+
+
+return highest+1;
+
+}
+
+
+/* =====================================================
+   INVENTORY
+===================================================== */
+
+function createInventory(){
+
+const container=
+document.getElementById(
+"items"
+);
+
+
+Object.keys(
+BLOCKS
+).forEach(
+function(type){
+
+const data=
+BLOCKS[type];
+
+
+const item=
+document.createElement(
+"div"
+);
+
+item.className="item";
+
+
+const icon=
+document.createElement(
+"div"
+);
+
+icon.className="icon";
+
+
+icon.style.background=
+"#"+
+data.color
+.toString(16)
+.padStart(6,"0");
+
+
+const text=
+document.createElement(
+"span"
+);
+
+text.textContent=
+data.name;
+
+
+item.appendChild(icon);
+
+item.appendChild(text);
+
+
+item.onclick=function(){
+
+selected=type;
+
+document.getElementById(
+"selected"
+).textContent=
+data.name;
+
+closeInventory();
+
+};
+
+
+container.appendChild(
+item
+);
+
+});
+
+}
+
+
+function openInventory(){
+
+document.getElementById(
+"inventory"
+).style.display=
+"block";
+
+}
+
+
+function closeInventory(){
+
+document.getElementById(
+"inventory"
+).style.display=
+"none";
+
+}
+
+
+document.getElementById(
+"invBtn"
+).onclick=
+openInventory;
+
+
+document.getElementById(
+"close"
+).onclick=
+closeInventory;
+
+
+/* =====================================================
+   JOYSTICK
+===================================================== */
+
+const joystickArea=
+document.getElementById(
+"joyArea"
+);
+
+const joystickBase=
+document.getElementById(
+"joyBase"
+);
+
+const joystick=
+document.getElementById(
+"joy"
+);
+
+
+joystickArea.addEventListener(
+"pointerdown",
+function(e){
+
+e.preventDefault();
+
+joystickPointer=
+e.pointerId;
+
+joystickArea.setPointerCapture(
+e.pointerId
+);
+
+moveJoystick(e);
+
+});
+
+
+joystickArea.addEventListener(
+"pointermove",
+function(e){
+
+if(
+e.pointerId===
+joystickPointer
+){
+
+moveJoystick(e);
+
+}
+
+});
+
+
+function moveJoystick(e){
+
+const rect=
+joystickBase.getBoundingClientRect();
+
+
+const centerX=
+rect.left+
+rect.width/2;
+
+
+const centerY=
+rect.top+
+rect.height/2;
+
+
+let dx=
+e.clientX-centerX;
+
+
+let dy=
+e.clientY-centerY;
+
+
+const maximum=48;
+
+
+const distance=
+Math.hypot(dx,dy);
+
+
+if(
+distance>maximum
+){
+
+dx=
+dx/distance*
+maximum;
+
+dy=
+dy/distance*
+maximum;
+
+}
+
+
+joystickX=
+dx/maximum;
+
+joystickY=
+dy/maximum;
+
+
+joystick.style.transform=
+"translate("+
+dx+
+"px,"+
+dy+
+"px)";
+
+}
+
+
+function releaseJoystick(){
+
+joystickPointer=null;
+
+joystickX=0;
+
+joystickY=0;
+
+joystick.style.transform=
+"translate(0,0)";
+
+}
+
+
+joystickArea.addEventListener(
+"pointerup",
+releaseJoystick
+);
+
+joystickArea.addEventListener(
+"pointercancel",
+releaseJoystick
+);
+
+
+/* =====================================================
+   TOUCH CAMERA
+===================================================== */
+
+renderer.domElement.addEventListener(
+"pointerdown",
+function(e){
+
+if(
+e.pointerType==="mouse"
+){
+
+return;
+
+}
+
+
+/* Don't use joystick area */
+
+if(
+e.clientX<220 &&
+e.clientY>innerHeight-220
+){
+
+return;
+
+}
+
+
+lookPointer=
+e.pointerId;
+
+
+lastLookX=
+e.clientX;
+
+lastLookY=
+e.clientY;
+
+
+renderer.domElement.setPointerCapture(
+e.pointerId
+);
+
+});
+
+
+renderer.domElement.addEventListener(
+"pointermove",
+function(e){
+
+if(
+e.pointerId!==lookPointer
+){
+
+return;
+
+}
+
+
+const dx=
+e.clientX-lastLookX;
+
+const dy=
+e.clientY-lastLookY;
+
+
+lastLookX=
+e.clientX;
+
+lastLookY=
+e.clientY;
+
+
+yaw-=
+dx*0.0055;
+
+
+pitch-=
+dy*0.0055;
+
+
+/* Natural vertical vision */
+
+pitch=
+Math.max(
+-1.48,
+Math.min(
+1.48,
+pitch
+)
+);
+
+});
+
+
+renderer.domElement.addEventListener(
+"pointerup",
+function(e){
+
+if(
+e.pointerId!==lookPointer
+){
+
+return;
+
+}
+
+
+lookPointer=null;
+
+
+/* Tap world */
+
+interactWithWorld();
+
+});
+
+
+/* =====================================================
+   MOUSE
+===================================================== */
+
+let mouseLooking=false;
+
+
+renderer.domElement.addEventListener(
+"mousedown",
+function(){
+
+mouseLooking=true;
+
+});
+
+
+window.addEventListener(
+"mouseup",
+function(){
+
+mouseLooking=false;
+
+});
+
+
+window.addEventListener(
+"mousemove",
+function(e){
+
+if(!mouseLooking){
+
+return;
+
+}
+
+
+yaw-=
+e.movementX*0.004;
+
+
+pitch-=
+e.movementY*0.004;
+
+
+pitch=
+Math.max(
+-1.48,
+Math.min(
+1.48,
+pitch
+)
+);
+
+});
+
+
+/* =====================================================
+   KEYBOARD
+===================================================== */
+
+window.addEventListener(
+"keydown",
+function(e){
+
+keys[
+e.key.toLowerCase()
+]=true;
+
+
+if(
+e.key===" "
+){
+
+jump();
+
+}
+
+
+if(
+e.key.toLowerCase()==="e"
+){
+
+openInventory();
+
+}
+
+
+if(
+e.key.toLowerCase()==="q"
+){
+
+breakBlock();
+
+}
+
+});
+
+
+window.addEventListener(
+"keyup",
+function(e){
+
+keys[
+e.key.toLowerCase()
+]=false;
+
+});
+
+
+/* =====================================================
+   JUMP
+===================================================== */
+
+document.getElementById(
+"jump"
+).addEventListener(
+"pointerdown",
+function(e){
+
+e.preventDefault();
+
+jump();
+
+});
+
+
+function jump(){
+
+if(
+mode==="creative"
+){
+
+player.y+=2;
+
+return;
+
+}
+
+
+if(
+grounded
+){
+
+velocityY=7;
+
+grounded=false;
+
+}
+
+}
+
+
+/* =====================================================
+   RAYCAST
+===================================================== */
+
+const raycaster=
+new T.Raycaster();
+
+
+function getTarget(){
+
+raycaster.setFromCamera(
+new T.Vector2(0,0),
+camera
+);
+
+
+const hits=
+raycaster.intersectObjects(
+meshes,
+false
+);
+
+
+if(
+hits.length===0
+){
+
+return null;
+
+}
+
+
+if(
+hits[0].distance>7
+){
+
+return null;
+
+}
+
+
+return hits[0];
+
+}
+
+
+/* =====================================================
+   BUILD BLOCK
+===================================================== */
+
+function interactWithWorld(){
+
+const hit=
+getTarget();
+
+
+if(!hit){
+
+return;
+
+}
+
+
+const block=
+hit.object.userData;
+
+
+const normal=
+hit.face.normal;
+
+
+const x=
+block.x+
+Math.round(normal.x);
+
+
+const y=
+block.y+
+Math.round(normal.y);
+
+
+const z=
+block.z+
+Math.round(normal.z);
+
+
+if(
+!getBlock(x,y,z)
+){
+
+setBlock(
+x,
+y,
+z,
+selected
+);
+
+rebuildWorld();
+
+}
+
+}
+
+
+/* =====================================================
+   BREAK BLOCK
+===================================================== */
+
+function breakBlock(){
+
+const hit=
+getTarget();
+
+
+if(!hit){
+
+return;
+
+}
+
+
+const block=
+hit.object.userData;
+
+
+if(
+block.y<=0
+){
+
+return;
+
+}
+
+
+removeBlock(
+block.x,
+block.y,
+block.z
+);
+
+
+rebuildWorld();
+
+}
+
+
+/* DOUBLE CLICK BREAK */
+
+renderer.domElement.addEventListener(
+"dblclick",
+function(){
+
+breakBlock();
+
+});
+
+
+/* RIGHT CLICK BREAK */
+
+window.addEventListener(
+"contextmenu",
+function(e){
+
+e.preventDefault();
+
+breakBlock();
+
+});
+
+
+/* =====================================================
+   PLAYER MOVEMENT
+===================================================== */
+
+function updatePlayer(dt){
+
+let forward=
+-joystickY;
+
+let strafe=
+joystickX;
+
+
+if(keys.w){
+
+forward+=1;
+
+}
+
+
+if(keys.s){
+
+forward-=1;
+
+}
+
+
+if(keys.a){
+
+strafe-=1;
+
+}
+
+
+if(keys.d){
+
+strafe+=1;
+
+}
+
+
+const length=
+Math.hypot(
+forward,
+strafe
+);
+
+
+if(
+length>1
+){
+
+forward/=length;
+
+strafe/=length;
+
+}
+
+
+let speed=
+mode==="creative"
+?8
+:5;
+
+
+if(
+keys.shift &&
+mode==="survival"
+){
+
+speed=7;
+
+}
+
+
+const sinYaw=
+Math.sin(yaw);
+
+
+const cosYaw=
+Math.cos(yaw);
+
+
+player.x+=
+(
+-sinY
